@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import {DbService} from '../service/db.service';
+import {Store} from '@ngrx/store';
+import {State} from '../stores/reducers';
 
 @Component({
   selector: 'app-home',
@@ -8,18 +10,27 @@ import {DbService} from '../service/db.service';
 })
 export class HomePage {
   listData: Array<any> = [];
-  constructor(private BD: DbService) {
+  constructor(private BD: DbService, private store: Store<State>) {
+    this.store.select('users','users').subscribe((users) => {
+      console.log('users')
+      console.log(users);
+      this.listData = users;
+    });
+
+    this.BD.getData();
   }
 
   save() {
     const data = Date.now();
-    this.BD.create(data).then((res: any) => {
-      console.log('res');
-      console.log(res);
-    }).catch((e) => {
-        console.log('errrr');
-        console.log(e);
-    });
+    // this.BD.create(data).then((res: any) => {
+    //   console.log('res');
+    //   console.log(res);
+    // }).catch((e) => {
+    //     console.log('errrr');
+    //     console.log(e);
+    // });
+
+    this.BD.createData(data);
   }
 
   list() {

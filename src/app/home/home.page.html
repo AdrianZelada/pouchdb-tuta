@@ -7,15 +7,10 @@
 </ion-header>
 
 <ion-content>
-  <div class="ion-padding">
-    The world is your oyster.
-    <p>If you get lost, the <a target="_blank" rel="noopener" href="https://ionicframework.com/docs/">docs</a> will be your guide.</p>
-  </div>
-
   <ion-list>
-    <ion-item *ngFor="let item of listData"> {{item.doc.name}}
-      <ion-button color="primary" (click)="edit(item.doc)">Edit</ion-button>
-      <ion-button color="secondary" (click)="delete(item.doc)">Delete</ion-button>
+    <ion-item *ngFor="let item of listData"> {{item.name}}
+      <ion-button color="primary" (click)="edit(item)">Edit</ion-button>
+      <ion-button color="secondary" (click)="delete(item)">Delete</ion-button>
     </ion-item>
   </ion-list>
   <ion-button (click)="save()">Create</ion-button>

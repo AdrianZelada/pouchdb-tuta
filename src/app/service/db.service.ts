@@ -7,6 +7,9 @@ import { Injectable } from '@angular/core';
 
 import PouchDB from 'pouchdb';
 import PouchFind from 'pouchdb-find';
+import {UserAdd, UsersLoad} from '../stores/actions';
+import {Store} from '@ngrx/store';
+import {State} from '../stores/reducers';
 PouchDB.plugin(PouchFind);
 
 
@@ -17,7 +20,7 @@ PouchDB.plugin(PouchFind);
 export class DbService {
 
   db = new PouchDB('users');
-  constructor() {
+  constructor(private store: Store<State>) {
 
       const changes = this.db.changes({
           since: 'now',
@@ -41,12 +44,43 @@ export class DbService {
       // }).catch(function (err) {
       //     console.log(err);
       // });
-
   }
+
+  getData() {
+      this.db.allDocs({
+          include_docs: true
+      }).then((response: any) => {
+          const rows = response.rows.map((data: any) => {
+              return data.doc;
+          });
+
+          const action = new UsersLoad(rows);
+          this.store.dispatch(action);
+      });
+  }
+
+    createData(data) {
+        this.db.post({
+            name: data
+        },{
+            include_docs: true
+        }).then((response) => {
+            const action = new UserAdd({users: {
+                _id : response.id,
+                name: data
+            },
+                lastSync: 1
+            });
+
+            this.store.dispatch(action);
+        });
+    }
 
   create(data) {
     return this.db.post({
         name: data
+    }, {
+        include_docs: true
     });
   }
 
@@ -55,6 +89,8 @@ export class DbService {
         include_docs: true
     });
   }
+
+
 
   update(data) {
       return this.db.put(data);
