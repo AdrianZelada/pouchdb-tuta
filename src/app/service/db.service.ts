@@ -7,10 +7,12 @@ import { Injectable } from '@angular/core';
 
 import PouchDB from 'pouchdb';
 import PouchFind from 'pouchdb-find';
-import {UserAdd, UsersLoad} from '../stores/actions';
+import PouchUpsert from 'pouchdb-upsert';
+import {UserAdd, UserEdit, UsersLoad} from '../stores/actions';
 import {Store} from '@ngrx/store';
 import {State} from '../stores/reducers';
 PouchDB.plugin(PouchFind);
+PouchDB.plugin(PouchUpsert);
 
 
 
@@ -38,12 +40,6 @@ export class DbService {
           console.log('error');
           console.log(err);
       });
-
-      // this.db.compact({interval: }).then(function (result) {
-      //     // handle result
-      // }).catch(function (err) {
-      //     console.log(err);
-      // });
   }
 
   getData() {
@@ -53,18 +49,17 @@ export class DbService {
           const rows = response.rows.map((data: any) => {
               return data.doc;
           });
-
           const action = new UsersLoad(rows);
           this.store.dispatch(action);
       });
   }
 
     createData(data) {
+        const options: any = {};
+        options['include_docs'] = true;
         this.db.post({
             name: data
-        },{
-            include_docs: true
-        }).then((response) => {
+        }, options).then((response) => {
             const action = new UserAdd({users: {
                 _id : response.id,
                 name: data
@@ -77,11 +72,11 @@ export class DbService {
     }
 
   create(data) {
-    return this.db.post({
-        name: data
-    }, {
-        include_docs: true
-    });
+        const options: any = {};
+        options['include_docs'] = true;
+        return this.db.post({
+            name: data
+        }, options);
   }
 
   find() {
@@ -93,7 +88,19 @@ export class DbService {
 
 
   update(data) {
-      return this.db.put(data);
+      this.db.get(data['_id']).then((resp: any) => {
+          delete data._rev;
+          data = {
+              ...resp,
+              ...data
+          };
+          this.db.put(data).then( (item: any) => {
+              const action = new UserEdit({user: data, lastSync: 1}, '_id');
+              this.store.dispatch(action);
+          }).catch((e) => {
+              console.log(e);
+          });
+      });
   }
 
   delete(data) {

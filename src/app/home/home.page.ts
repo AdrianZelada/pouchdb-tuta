@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import {DbService} from '../service/db.service';
 import {Store} from '@ngrx/store';
 import {State} from '../stores/reducers';
+import {UserService} from '../service/user.service';
 
 @Component({
   selector: 'app-home',
@@ -10,11 +11,19 @@ import {State} from '../stores/reducers';
 })
 export class HomePage {
   listData: Array<any> = [];
-  constructor(private BD: DbService, private store: Store<State>) {
+  constructor(
+      private BD: DbService,
+      private userService: UserService,
+      private store: Store<State>) {
     this.store.select('users','users').subscribe((users) => {
       console.log('users')
       console.log(users);
       this.listData = users;
+    });
+
+    this.userService.getAll().then((response) => {
+      console.log('response')
+      console.log(response)
     });
 
     this.BD.getData();
@@ -43,14 +52,16 @@ export class HomePage {
   }
 
   edit(data) {
+    console.log(data);
     data.name = Date.now();
-    this.BD.update(data).then((resp) => {
-      console.log('update');
-      console.log(resp);
-    }).catch((e) => {
-        console.log('errrr update');
-        console.log(e);
-    });
+    this.BD.update(data);
+    // this.BD.update(data).then((resp) => {
+    //   console.log('update');
+    //   console.log(resp);
+    // }).catch((e) => {
+    //     console.log('errrr update');
+    //     console.log(e);
+    // });
   }
 
   delete(data) {
