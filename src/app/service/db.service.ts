@@ -8,9 +8,11 @@ import { Injectable } from '@angular/core';
 import PouchDB from 'pouchdb';
 import PouchFind from 'pouchdb-find';
 import PouchUpsert from 'pouchdb-upsert';
-import {UserAdd, UserEdit, UsersLoad} from '../stores/actions';
+import {UserAdd, UserEdit, UsersLoad, UserSync} from '../stores/actions';
 import {Store} from '@ngrx/store';
 import {State} from '../stores/reducers';
+import {UserService} from './user.service';
+import {first} from 'rxjs/operators';
 PouchDB.plugin(PouchFind);
 PouchDB.plugin(PouchUpsert);
 
@@ -22,7 +24,10 @@ PouchDB.plugin(PouchUpsert);
 export class DbService {
 
   db = new PouchDB('users');
-  constructor(private store: Store<State>) {
+  constructor(
+      private store: Store<State>,
+      private userService: UserService,
+  ) {
 
       const changes = this.db.changes({
           since: 'now',
@@ -51,20 +56,37 @@ export class DbService {
           });
           const action = new UsersLoad(rows);
           this.store.dispatch(action);
+          // this.store.
+          this.store.select("users","lastSync")
+              .pipe(
+                  first()
+              )
+              .subscribe((obj) => {
+              console.log(obj)
+              this.userService.syncData("personnel", obj).then((results: any) => {
+                  console.log(results);
+                  if (results.created) {
+                      results.created.forEach((item: any) => {
+                          this.createData(item);
+                      });
+                  }
+                  const lastSyncAction = new UserSync(results.lastSync);
+                  this.store.dispatch(lastSyncAction);
+              });
+          })
+
+          // this.userService.syncData("personnel", this.store.select("users","lastSync").valueOf())
       });
   }
 
     createData(data) {
         const options: any = {};
         options['include_docs'] = true;
-        this.db.post({
-            name: data
-        }, options).then((response) => {
+        this.db.post(data, options).then((response) => {
             const action = new UserAdd({users: {
                 _id : response.id,
-                name: data
-            },
-                lastSync: 1
+                ...data
+            }
             });
 
             this.store.dispatch(action);

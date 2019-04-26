@@ -26,6 +26,11 @@ export class HomePage {
       console.log(response)
     });
 
+    this.userService.syncData("personnel", 0).then((response) => {
+      console.log("response syncData");
+      console.log(response);
+    })
+
     this.BD.getData();
   }
 

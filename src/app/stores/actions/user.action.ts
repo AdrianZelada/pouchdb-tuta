@@ -5,6 +5,7 @@ export const USERS_LOAD             = '[USER] Load';
 export const USER_ADD               = '[USER] Add';
 export const USER_EDIT              = '[USER] Edit';
 export const USER_REMOVE            = '[USER] Remove';
+export const USER_SYNC              = '[USER] Sync';
 
 export class UsersLoad implements Action {
     readonly type = USERS_LOAD;
@@ -26,6 +27,11 @@ export class UserRemove implements Action {
     constructor(public id: any, public key: string) {}
 }
 
+export class UserSync implements Action {
+    readonly type = USER_SYNC;
+    constructor(public lastSync: any) {}
+}
 
 
-export type userActions = UsersLoad | UserAdd | UserEdit | UserRemove;
+
+export type userActions = UsersLoad | UserAdd | UserEdit | UserRemove | UserSync;
